@@ -1,34 +1,6 @@
-import type { Env } from "./types";
-
-import { getAvailable, getOwner } from "@ensdomains/ensjs/public";
-import { getAddress, type Address, type Hex } from "viem";
+import { Address, Client, getAddress, Hex } from "viem";
+import { EnsPublicClient } from "./chains";
 import { verifyTypedData } from "viem/actions";
-import { getClient, type chains } from "./chains";
-
-export const getOwnerAndAvailable = async ({
-  env,
-  chain,
-  name,
-}: {
-  env: Env;
-  chain: (typeof chains)[number];
-  name: string;
-}) => {
-  const client = getClient({ env, chain });
-
-  const labels = name.split(".");
-  const isDotEth = labels.length === 2 && labels[1] === "eth";
-
-  const [ownership, available] = await Promise.all([
-    getOwner(client, { name }),
-    isDotEth ? getAvailable(client, { name }) : false,
-  ]);
-
-  return {
-    owner: ownership?.owner ?? null,
-    available,
-  };
-};
 
 export const typedDataParameters = {
   domain: {
@@ -47,26 +19,23 @@ export const typedDataParameters = {
 } as const;
 
 export const getVerifiedAddress = async ({
-  env,
-  chain,
+  client,
   sig,
   expiry,
   name,
   hash,
   unverifiedAddress,
 }: {
-  env: Env;
-  chain: (typeof chains)[number];
+  client: EnsPublicClient;
   sig: Hex;
   expiry: string;
   name: string;
   hash: Hex;
   unverifiedAddress: Address;
 }) => {
-  const client = getClient({ env, chain });
   const address = getAddress(unverifiedAddress);
 
-  const valid = await verifyTypedData(client, {
+  const valid = await verifyTypedData(client as Client, {
     ...typedDataParameters,
     address,
     signature: sig,

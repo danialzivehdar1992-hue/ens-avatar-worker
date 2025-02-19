@@ -1,17 +1,19 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["esnext"],
-    "types": ["@cloudflare/workers-types"],
-    "moduleResolution": "node",
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["src/*"]
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "lib": ["ESNext"],
+        "types": [
+            "./.wrangler/types/runtime",
+            "@cloudflare/vitest-pool-workers"
+        ],
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
+        "paths": {
+            "@/*": ["./src/*"]
+        }
     }
-  },
-  "include": ["src/**/*", "bindings.d.ts"]
 }

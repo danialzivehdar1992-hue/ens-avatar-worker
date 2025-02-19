@@ -1,8 +1,0 @@
-name = "avatar-upload"
-main = "src/index.ts"
-compatibility_date = "2023-05-18"
-
-[[r2_buckets]]
-binding = "AVATAR_BUCKET"
-bucket_name = 'avatar-storage'
-preview_bucket_name = 'preview-avatar-storage'
