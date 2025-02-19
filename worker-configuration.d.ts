@@ -3,5 +3,5 @@
 interface Env {
 	WEB3_ENDPOINT_MAP: string;
 	AVATAR_BUCKET: R2Bucket;
-	BANNER_BUCKET: R2Bucket;
+	HEADER_BUCKET: R2Bucket;
 }

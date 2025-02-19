@@ -22,9 +22,9 @@
             "preview_bucket_name": "preview-avatar-storage"
         },
         {
-            "binding": "BANNER_BUCKET",
-            "bucket_name": "banner-storage",
-            "preview_bucket_name": "preview-banner-storage"
+            "binding": "HEADER_BUCKET",
+            "bucket_name": "header-storage",
+            "preview_bucket_name": "preview-header-storage"
         }
     ]
     // "d1_databases": [
