@@ -18,7 +18,7 @@ export type EnsPublicClient = ReturnType<typeof createEnsPublicClient>;
 export const getChainFromNetwork = (_network: string) => {
   const lowercased = _network.toLowerCase();
   const network = lowercased === "mainnet" ? "ethereum" : lowercased;
-  return chains.find(chain => chain.name.toLowerCase() === network);
+  return chains.find((chain) => chain.name.toLowerCase() === network);
 };
 
 export type NetworkMiddlewareEnv = {
@@ -48,19 +48,19 @@ export type ClientMiddlewareEnv = NetworkMiddlewareEnv & {
     client: EnsPublicClient;
   };
 };
-export const clientMiddleware = createMiddleware<
-  BaseEnv & ClientMiddlewareEnv
->(async (c, next) => {
-  const endpointMap = JSON.parse(c.env.WEB3_ENDPOINT_MAP) as Record<
-    Network,
-    string
-  >;
-  const client = createEnsPublicClient({
-    chain: c.var.chain,
-    transport: http(endpointMap[c.var.network]),
-  });
+export const clientMiddleware = createMiddleware<BaseEnv & ClientMiddlewareEnv>(
+  async (c, next) => {
+    const endpointMap = JSON.parse(c.env.WEB3_ENDPOINT_MAP) as Record<
+      Network,
+      string
+    >;
+    const client = createEnsPublicClient({
+      chain: c.var.chain,
+      transport: http(endpointMap[c.var.network]),
+    });
 
-  c.set("client", client);
+    c.set("client", client);
 
-  await next();
-});
+    await next();
+  }
+);
