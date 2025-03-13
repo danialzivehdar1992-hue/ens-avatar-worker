@@ -25,6 +25,7 @@ export const getVerifiedAddress = async ({
   name,
   hash,
   unverifiedAddress,
+  uploadType,
 }: {
   client: EnsPublicClient;
   sig: Hex;
@@ -32,6 +33,7 @@ export const getVerifiedAddress = async ({
   name: string;
   hash: Hex;
   unverifiedAddress: Address;
+  uploadType: "avatar" | "header";
 }) => {
   const address = getAddress(unverifiedAddress);
 
@@ -40,7 +42,7 @@ export const getVerifiedAddress = async ({
     address,
     signature: sig,
     message: {
-      upload: "avatar",
+      upload: uploadType,
       expiry,
       name,
       hash,

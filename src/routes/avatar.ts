@@ -96,6 +96,7 @@ router.put(
       name,
       hash: `0x${hash}`,
       unverifiedAddress: unverifiedAddress as Address,
+      uploadType: "avatar",
     });
 
     if (!verifiedAddress) {

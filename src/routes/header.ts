@@ -92,6 +92,7 @@ router.put("/:name/h", clientMiddleware, vValidator("json", uploadSchema), async
     name,
     hash: `0x${hash}`,
     unverifiedAddress: unverifiedAddress as Address,
+    uploadType: "header",
   });
 
   if (!verifiedAddress) {
