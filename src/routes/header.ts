@@ -35,7 +35,7 @@ const uploadSchema = v.object({
   ),
 });
 
-router.get("/:name/header", clientMiddleware, async (c) => {
+router.get("/:name/h", clientMiddleware, async (c) => {
   const name = c.req.param("name");
   const { network, client } = c.var;
 
@@ -65,7 +65,7 @@ router.get("/:name/header", clientMiddleware, async (c) => {
   return c.text(`${name} not found on ${network}`, 404);
 });
 
-router.put("/:name/header", clientMiddleware, vValidator("json", uploadSchema), async (c) => {
+router.put("/:name/h", clientMiddleware, vValidator("json", uploadSchema), async (c) => {
   const name = c.req.param("name");
   const { expiry, dataURL, sig, unverifiedAddress } = c.req.valid("json");
   const { network, client } = c.var;
