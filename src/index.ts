@@ -21,7 +21,8 @@ app.use(
           if (hostname.endsWith(".ens.domains")) {
             return requestOrigin; // reflect subdomain
           }
-        } catch {
+        }
+        catch {
           // If it's not a valid URL, deny
         }
         return ""; // empty => disallowed
@@ -31,7 +32,7 @@ app.use(
       return "*";
     },
     allowMethods: ["GET", "PUT", "POST", "OPTIONS", "DELETE"],
-  })
+  }),
 );
 const networkRouter = createApp<NetworkMiddlewareEnv>().use(networkMiddleware);
 

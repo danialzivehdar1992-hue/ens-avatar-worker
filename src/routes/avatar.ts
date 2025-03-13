@@ -18,17 +18,17 @@ const MAX_IMAGE_SIZE = 1024 * 512;
 const uploadSchema = v.object({
   expiry: v.pipe(
     v.string("expiry value is missing"),
-    v.regex(/^\d+$/, "expiry value is not number")
+    v.regex(/^\d+$/, "expiry value is not number"),
   ),
   dataURL: v.string("dataURL value is missing"),
   sig: v.pipe(
     v.string("sig value is missing"),
-    v.hexadecimal("sig value is not hex")
+    v.hexadecimal("sig value is not hex"),
   ),
   unverifiedAddress: v.pipe(
     v.string("unverifiedAddress value is missing"),
     v.hexadecimal("unverifiedAddress value is not hex"),
-    v.check(isAddress, "unverifiedAddress value is not address")
+    v.check(isAddress, "unverifiedAddress value is not address"),
   ),
 });
 
@@ -37,12 +37,12 @@ router.get("/:name", clientMiddleware, async (c) => {
   const { network, client } = c.var;
 
   const existingAvatarFile = await c.env.AVATAR_BUCKET.get(
-    `${network}/registered/${name}`
+    `${network}/registered/${name}`,
   );
 
   if (
-    existingAvatarFile &&
-    existingAvatarFile.httpMetadata?.contentType === "image/jpeg"
+    existingAvatarFile
+    && existingAvatarFile.httpMetadata?.contentType === "image/jpeg"
   ) {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", existingAvatarFile.size.toString());
@@ -111,10 +111,11 @@ router.put(
     if (!available) {
       if (!owner) {
         return c.text("Name not found", 404);
-      } else if (verifiedAddress !== owner) {
+      }
+      else if (verifiedAddress !== owner) {
         return c.text(
           `Address ${verifiedAddress} is not the owner of ${name}`,
-          403
+          403,
         );
       }
     }
@@ -134,10 +135,11 @@ router.put(
 
     if (uploaded.key === key) {
       return c.json({ message: "uploaded" }, 200);
-    } else {
+    }
+    else {
       return c.text(`${name} not uploaded`, 500);
     }
-  }
+  },
 );
 
 export default router;
