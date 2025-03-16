@@ -26,7 +26,22 @@
             "bucket_name": "header-storage",
             "preview_bucket_name": "preview-header-storage"
         }
-    ]
+    ],
+    "vars": {
+        "ENVIRONMENT": "dev"
+    },
+    "env": {
+        "staging": {
+            "vars": {
+                "ENVIRONMENT": "staging"
+            }
+        },
+        "production": {
+            "vars": {
+                "ENVIRONMENT": "production"
+            }
+        }
+    }
     // "d1_databases": [
     //   {
     //     "binding": "MY_DB",
