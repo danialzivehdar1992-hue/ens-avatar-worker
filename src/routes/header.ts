@@ -2,9 +2,8 @@ import { vValidator } from "@hono/valibot-validator";
 import * as v from "valibot";
 import { createApp } from "@/utils/hono";
 import { clientMiddleware, NetworkMiddlewareEnv } from "@/utils/chains";
-import { Address, isAddress } from "viem";
+import { Address, isAddress, sha256 } from "viem";
 import { Hex } from "viem";
-import { sha256 } from "hono/utils/crypto";
 import { normalize } from "viem/ens";
 import { getVerifiedAddress } from "@/utils/eth";
 import { getOwnerAndAvailable } from "@/utils/owner";
@@ -72,7 +71,7 @@ router.put("/:name/h", clientMiddleware, vValidator("json", uploadSchema), async
   const { network, client } = c.var;
 
   const { mime, bytes } = dataURLToBytes(dataURL);
-  const hash = await sha256(bytes);
+  const hash = sha256(bytes);
 
   if (!hash) {
     return c.text("Failed to hash image", 500);
@@ -84,14 +83,12 @@ router.put("/:name/h", clientMiddleware, vValidator("json", uploadSchema), async
   if (name !== normalize(name))
     return c.text("Name must be in normalized form", 400);
 
-  console.log("hash", hash);
-
   const verifiedAddress = await getVerifiedAddress({
     client,
     sig: sig as Hex,
     expiry,
     name,
-    hash: `0x${hash}`,
+    hash,
     unverifiedAddress: unverifiedAddress as Address,
     uploadType: "header",
   });
