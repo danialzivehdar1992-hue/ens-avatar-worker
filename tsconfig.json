@@ -15,7 +15,10 @@
         /* Specify how TypeScript looks up a file from a given module specifier. */
         "moduleResolution": "Bundler",
         /* Specify type package names to be included without being referenced in a source file. */
-        "types": ["./worker-configuration.d.ts"],
+        "types": [
+            "./worker-configuration.d.ts",
+            "@cloudflare/vitest-pool-workers"
+        ],
         /* Enable importing .json files */
         "resolveJsonModule": true,
 
@@ -40,8 +43,9 @@
         /* Skip type checking all .d.ts files. */
         "skipLibCheck": true,
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "@test/*": ["./test/*"]
         }
     },
-    "include": ["src/**/*.ts", "worker-configuration.d.ts"]
+    "include": ["src/**/*.ts", "worker-configuration.d.ts", "test/**/*.ts"]
 }

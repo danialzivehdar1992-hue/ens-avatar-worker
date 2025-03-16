@@ -1,15 +1,15 @@
 import { vValidator } from "@hono/valibot-validator";
 import * as v from "valibot";
-import { createApp } from "../utils/hono";
-import { clientMiddleware, NetworkMiddlewareEnv } from "../utils/chains";
+import { createApp } from "@/utils/hono";
+import { clientMiddleware, NetworkMiddlewareEnv } from "@/utils/chains";
 import { Address, isAddress } from "viem";
 import { Hex } from "viem";
 import { sha256 } from "hono/utils/crypto";
 import { normalize } from "viem/ens";
-import { getVerifiedAddress } from "../utils/eth";
-import { getOwnerAndAvailable } from "../utils/owner";
-import { findAndPromoteUnregisteredHeader } from "@/utils/header";
+import { getVerifiedAddress } from "@/utils/eth";
+import { getOwnerAndAvailable } from "@/utils/owner";
 import { dataURLToBytes } from "@/utils/data";
+import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
 
 const router = createApp<NetworkMiddlewareEnv>();
 
@@ -39,7 +39,7 @@ router.get("/:name/h", clientMiddleware, async (c) => {
   const name = c.req.param("name");
   const { network, client } = c.var;
 
-  const existingHeaderFile = await c.env.HEADER_BUCKET.get(`${network}/registered/${name}`);
+  const existingHeaderFile = await c.env.HEADER_BUCKET.get(MEDIA_BUCKET_KEY.registered(network, name));
 
   if (existingHeaderFile && existingHeaderFile.httpMetadata?.contentType === "image/jpeg") {
     c.header("Content-Type", "image/jpeg");
@@ -48,11 +48,12 @@ router.get("/:name/h", clientMiddleware, async (c) => {
     return c.body(existingHeaderFile.body);
   }
 
-  const unregisteredHeader = await findAndPromoteUnregisteredHeader({
+  const unregisteredHeader = await findAndPromoteUnregisteredMedia({
     env: c.env,
     network,
     name,
     client,
+    mediaType: "header",
   });
 
   if (unregisteredHeader) {
@@ -120,8 +121,8 @@ router.put("/:name/h", clientMiddleware, vValidator("json", uploadSchema), async
 
   const bucket = c.env.HEADER_BUCKET;
   const key = available
-    ? `${network}/unregistered/${name}/${verifiedAddress}`
-    : `${network}/registered/${name}`;
+    ? MEDIA_BUCKET_KEY.unregistered(network, name, verifiedAddress)
+    : MEDIA_BUCKET_KEY.registered(network, name);
 
   const uploaded = await bucket.put(key, bytes, {
     httpMetadata: { contentType: "image/jpeg" },

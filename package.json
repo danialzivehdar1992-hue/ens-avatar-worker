@@ -5,7 +5,8 @@
         "deploy": "wrangler deploy --minify",
         "generate-types": "wrangler types",
         "type-check": "pnpm generate-types && tsc",
-        "lint": "eslint -c eslint.config.mjs"
+        "lint": "eslint -c eslint.config.mjs",
+        "test": "vitest"
     },
     "dependencies": {
         "@ensdomains/ensjs": "^4.0.2",

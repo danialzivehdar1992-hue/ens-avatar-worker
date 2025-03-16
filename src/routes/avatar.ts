@@ -1,15 +1,15 @@
 import { vValidator } from "@hono/valibot-validator";
 import * as v from "valibot";
-import { createApp } from "../utils/hono";
-import { clientMiddleware, NetworkMiddlewareEnv } from "../utils/chains";
+import { createApp } from "@/utils/hono";
+import { clientMiddleware, NetworkMiddlewareEnv } from "@/utils/chains";
 import { Address, isAddress } from "viem";
 import { Hex } from "viem";
 import { sha256 } from "hono/utils/crypto";
 import { normalize } from "viem/ens";
-import { getVerifiedAddress } from "../utils/eth";
-import { getOwnerAndAvailable } from "../utils/owner";
+import { getVerifiedAddress } from "@/utils/eth";
+import { getOwnerAndAvailable } from "@/utils/owner";
 import { dataURLToBytes } from "@/utils/data";
-import { findAndPromoteUnregisteredAvatar } from "@/utils/avatar";
+import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
 
 const router = createApp<NetworkMiddlewareEnv>();
 
@@ -37,7 +37,7 @@ router.get("/:name", clientMiddleware, async (c) => {
   const { network, client } = c.var;
 
   const existingAvatarFile = await c.env.AVATAR_BUCKET.get(
-    `${network}/registered/${name}`,
+    MEDIA_BUCKET_KEY.registered(network, name),
   );
 
   if (
@@ -50,11 +50,12 @@ router.get("/:name", clientMiddleware, async (c) => {
     return c.body(existingAvatarFile.body);
   }
 
-  const unregisteredAvatar = await findAndPromoteUnregisteredAvatar({
+  const unregisteredAvatar = await findAndPromoteUnregisteredMedia({
     env: c.env,
     network,
     name,
     client,
+    mediaType: "avatar",
   });
 
   if (unregisteredAvatar) {
@@ -127,8 +128,8 @@ router.put(
 
     const bucket = c.env.AVATAR_BUCKET;
     const key = available
-      ? `${network}/unregistered/${name}/${verifiedAddress}`
-      : `${network}/registered/${name}`;
+      ? MEDIA_BUCKET_KEY.unregistered(network, name, verifiedAddress)
+      : MEDIA_BUCKET_KEY.registered(network, name);
 
     const uploaded = await bucket.put(key, bytes, {
       httpMetadata: { contentType: "image/jpeg" },

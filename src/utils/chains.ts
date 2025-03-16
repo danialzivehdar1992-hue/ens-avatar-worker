@@ -27,6 +27,7 @@ export type NetworkMiddlewareEnv = {
     network: Network;
   };
 };
+
 export const networkMiddleware = createMiddleware<
   BaseEnv & NetworkMiddlewareEnv
 >(async (c, next) => {

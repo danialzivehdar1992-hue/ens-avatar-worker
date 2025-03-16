@@ -7,5 +7,9 @@ export default defineWorkersConfig({
         wrangler: { configPath: "./wrangler.jsonc" },
       },
     },
+    alias: {
+      "@": new URL("./src", import.meta.url).pathname,
+      "@test": new URL("./test", import.meta.url).pathname,
+    },
   },
 });
