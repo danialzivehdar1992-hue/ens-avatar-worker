@@ -35,6 +35,7 @@ export const createTestUploadData = async (
   uploadType: "avatar" | "header",
   name: string,
   hash: Hex,
+  expiry: string = (Date.now() + 3_600_000).toString(),
   account = TEST_ACCOUNT,
 ): Promise<{
   address: Address;
@@ -42,7 +43,6 @@ export const createTestUploadData = async (
   sig: Hex;
   hash: Hex;
 }> => {
-  const expiry = (Math.floor(Date.now() / 1000) + 3600).toString(); // 1 hour from now
   const message = {
     upload: uploadType,
     expiry,

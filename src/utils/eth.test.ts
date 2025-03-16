@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { typedDataParameters, getVerifiedAddress } from "@/utils/eth";
-import { createTestUploadData, TEST_ACCOUNT, TEST_PUBLIC_CLIENT } from "@test/utils/wallet";
+import { createTestUploadData, TEST_ACCOUNT, TEST_PUBLIC_CLIENT } from "@test/setup/helpers";
 import { Address, Hex } from "viem";
 import { verifyTypedData } from "viem/actions";
 
