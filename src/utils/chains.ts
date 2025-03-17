@@ -51,7 +51,7 @@ export type ClientMiddlewareEnv = NetworkMiddlewareEnv & {
 };
 export const clientMiddleware = createMiddleware<BaseEnv & ClientMiddlewareEnv>(
   async (c, next) => {
-    const endpointMap = JSON.parse(c.env.WEB3_ENDPOINT_MAP) as Record<
+    const endpointMap = JSON.parse(c.env.WEB3_ENDPOINT_MAP ?? "{}") as Record<
       Network,
       string
     >;
