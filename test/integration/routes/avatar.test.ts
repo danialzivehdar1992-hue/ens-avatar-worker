@@ -112,6 +112,10 @@ describe("Avatar Routes", () => {
       const res = await app.request(`/${MOCK_NAME}`, {}, env);
 
       // Verify result
+      expect(vi.mocked(owner.getOwnerAndAvailable)).toHaveBeenCalledWith({
+        client: expect.anything(),
+        name: MOCK_NAME,
+      });
       expect(res.status).toBe(404);
       expect(await res.text()).toBe(`${MOCK_NAME} not found on mainnet`);
     });
@@ -132,9 +136,155 @@ describe("Avatar Routes", () => {
         expect.objectContaining({ network }),
       );
     });
+
+    test("returns 200 when using HEAD method with correct headers but no body", async () => {
+      // Mock registered avatar exists
+      const imageContent = new Uint8Array([1, 2, 3, 4, 5]);
+      await env.AVATAR_BUCKET.put(media.MEDIA_BUCKET_KEY.registered("mainnet", MOCK_NAME), imageContent, {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+
+      // Make the HEAD request
+      // This tests the HTTP HEAD verb functionality which should return metadata only, not the actual image
+      // Important for clients that need to check image existence or get dimensions without downloading content
+      const res = await app.request(`/${MOCK_NAME}`, { method: "HEAD" }, env);
+
+      // Verify result
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Content-Type")).toBe("image/jpeg");
+      expect(res.headers.get("Content-Length")).toBe(imageContent.length.toString());
+
+      // Verify body is empty for HEAD request
+      const buffer = await res.arrayBuffer();
+      expect(buffer.byteLength).toBe(0);
+    });
+
+    test("updates an existing image with a new one", async () => {
+      // Step 1: Put the initial image into storage
+      const initialImage = new Uint8Array([1, 2, 3]);
+      await env.AVATAR_BUCKET.put(media.MEDIA_BUCKET_KEY.registered("goerli", MOCK_NAME), initialImage, {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+
+      // Get the initial image
+      let res = await app.request(`/goerli/${MOCK_NAME}`, {}, env);
+      expect(res.status).toBe(200);
+      expect(new Uint8Array(await res.arrayBuffer())).toEqual(initialImage);
+
+      // Step 2: Put a new image with different content
+      const updatedImage = new Uint8Array([4, 5, 6, 7, 8]);
+      await env.AVATAR_BUCKET.put(media.MEDIA_BUCKET_KEY.registered("goerli", MOCK_NAME), updatedImage, {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+
+      // Verify updated image is returned
+      res = await app.request(`/goerli/${MOCK_NAME}`, {}, env);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Content-Length")).toBe(updatedImage.length.toString());
+      expect(new Uint8Array(await res.arrayBuffer())).toEqual(updatedImage);
+    });
+
+    test("returns 404 when content type is not image/jpeg", async () => {
+      // Mock getOwnerAndAvailable to return the owner
+      vi.mocked(owner.getOwnerAndAvailable).mockResolvedValue({
+        owner: TEST_ACCOUNT.address,
+        available: false,
+      });
+
+      // Mock registered avatar exists with wrong content type
+      const imageContent = new Uint8Array([1, 2, 3, 4, 5]);
+      await env.AVATAR_BUCKET.put(media.MEDIA_BUCKET_KEY.registered("mainnet", MOCK_NAME), imageContent, {
+        httpMetadata: { contentType: "text/html" },
+      });
+
+      // Make the request
+      // NOTE: Using HEAD request here is necessary because R2 objects must be fully consumed in tests,
+      // but our handler stops reading the response when content-type doesn't match "image/jpeg".
+      // This approach prevents test errors from "unconsumed response" while still testing the behavior.
+      const res = await app.request(`/${MOCK_NAME}`, {
+        method: "HEAD",
+      }, env);
+
+      // Verify result - should be 404 since it's not a jpeg
+      expect(res.status).toBe(404);
+    });
+
+    test("deletes all unregistered files when a name becomes registered", async () => {
+      // Create multiple unregistered images by different uploaders
+      // This test is important to verify the service properly cleans up outdated files
+      // when a name transitions from unregistered to registered state
+      const imageBuffer = new Uint8Array([10, 20, 30, 40]);
+      const uploaders = Array.from({ length: 5 }, (_, i) => `0x${(i + 1).toString().padStart(40, "0")}` as const);
+
+      // Create unregistered files for all uploaders
+      for (const uploader of uploaders) {
+        await env.AVATAR_BUCKET.put(
+          media.MEDIA_BUCKET_KEY.unregistered("mainnet", MOCK_NAME, uploader),
+          imageBuffer,
+          { httpMetadata: { contentType: "image/jpeg" } },
+        );
+      }
+
+      // Mock that the owner is the first uploader
+      vi.mocked(owner.getOwnerAndAvailable).mockResolvedValue({
+        owner: uploaders[0],
+        available: false,
+      });
+
+      // Make request which should promote the first uploader's file and delete the others
+      const res = await app.request(`/${MOCK_NAME}`, {}, env);
+      expect(res.status).toBe(200);
+
+      // Verify registered file exists
+      const registeredFile = await env.AVATAR_BUCKET.get(
+        media.MEDIA_BUCKET_KEY.registered("mainnet", MOCK_NAME),
+      );
+      assert(registeredFile);
+      await registeredFile.arrayBuffer();
+
+      // Verify unregistered files are deleted
+      const { objects } = await env.AVATAR_BUCKET.list({
+        prefix: `mainnet/unregistered/${MOCK_NAME}`,
+      });
+      expect(objects.length).toBe(0);
+    });
+
+    test("works across different networks", async () => {
+      // Setup different files on different networks
+      // This test ensures that files are properly isolated by network -
+      // each network should have its own storage space and not interfere with others
+      const mainnetImage = new Uint8Array([1, 2, 3]);
+      const goerliImage = new Uint8Array([4, 5, 6]);
+
+      await env.AVATAR_BUCKET.put(media.MEDIA_BUCKET_KEY.registered("mainnet", MOCK_NAME), mainnetImage, {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+
+      await env.AVATAR_BUCKET.put(media.MEDIA_BUCKET_KEY.registered("goerli", MOCK_NAME), goerliImage, {
+        httpMetadata: { contentType: "image/jpeg" },
+      });
+
+      // Test mainnet network
+      let res = await app.request(`/mainnet/${MOCK_NAME}`, {}, env);
+      let resImage = new Uint8Array(await res.arrayBuffer());
+      expect(res.status).toBe(200);
+      expect(resImage).toEqual(mainnetImage);
+
+      // Test goerli network
+      res = await app.request(`/goerli/${MOCK_NAME}`, {}, env);
+      expect(res.status).toBe(200);
+      resImage = new Uint8Array(await res.arrayBuffer());
+      expect(resImage).toEqual(goerliImage);
+
+      // Files should be isolated by network
+      expect(resImage).not.toEqual(mainnetImage);
+    });
   });
 
   describe("PUT /:name", () => {
+    // Helper function to perform avatar uploads with proper signing
+    // This abstracts the complexity of creating valid upload requests with signatures
+    // and returns the response along with the test data for verification
     const uploadAvatar = async (name: string, dataURL: string, network: string, expiry?: string) => {
       const imageBuffer = data.dataURLToBytes(dataURL).bytes;
       const imageHash = sha256(imageBuffer);
@@ -248,6 +398,8 @@ describe("Avatar Routes", () => {
         owner: TEST_ACCOUNT.address,
       });
 
+      // Using an expired timestamp (past date) for the expiry to trigger the expired signature check
+      // This is crucial for preventing replay attacks with old signatures
       const dataURL = "data:image/jpeg;base64,test123123";
       const { res } = await uploadAvatar(NORMALIZED_NAME, dataURL, "mainnet", (Date.now() - 1000).toString());
 
@@ -368,6 +520,32 @@ describe("Avatar Routes", () => {
         imageBuffer,
         { httpMetadata: { contentType: "image/jpeg" } },
       );
+    });
+
+    test("returns 400 when the request is missing required parameters", async () => {
+      const dataURL = "data:image/jpeg;base64,test123123";
+      const imageBuffer = data.dataURLToBytes(dataURL).bytes;
+      const imageHash = sha256(imageBuffer);
+
+      const testData = await createTestUploadData("avatar", NORMALIZED_NAME, imageHash);
+
+      // Create a request without unverifiedAddress
+      const res = await app.request(`/mainnet/${NORMALIZED_NAME}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expiry: testData.expiry,
+          dataURL: dataURL,
+          sig: testData.sig,
+          // unverifiedAddress is intentionally omitted
+        }),
+      }, env);
+
+      expect(res.status).toBe(400);
+      // Valibot validator should reject with the proper error message
+      expect(await res.text()).toContain("unverifiedAddress");
     });
   });
 });

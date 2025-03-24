@@ -7,7 +7,7 @@ import { Hex } from "viem";
 import { normalize } from "viem/ens";
 import { getVerifiedAddress } from "@/utils/eth";
 import { getOwnerAndAvailable } from "@/utils/owner";
-import { dataURLToBytes } from "@/utils/data";
+import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
 import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
 
 const router = createApp<NetworkMiddlewareEnv>();
@@ -35,8 +35,12 @@ router.get("/:name", clientMiddleware, async (c) => {
   const name = c.req.param("name");
   const { network, client } = c.var;
 
-  const existingAvatarFile = await c.env.AVATAR_BUCKET.get(
+  const isHead = c.req.method === "HEAD";
+
+  const existingAvatarFile = await R2GetOrHead(
+    c.env.AVATAR_BUCKET,
     MEDIA_BUCKET_KEY.registered(network, name),
+    isHead,
   );
 
   if (
@@ -47,6 +51,10 @@ router.get("/:name", clientMiddleware, async (c) => {
     c.header("Content-Length", existingAvatarFile.size.toString());
 
     return c.body(existingAvatarFile.body);
+  }
+
+  if (isHead) {
+    return c.text(`${name} not found on ${network}`, 404);
   }
 
   const unregisteredAvatar = await findAndPromoteUnregisteredMedia({

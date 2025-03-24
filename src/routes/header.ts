@@ -7,7 +7,7 @@ import { Hex } from "viem";
 import { normalize } from "viem/ens";
 import { getVerifiedAddress } from "@/utils/eth";
 import { getOwnerAndAvailable } from "@/utils/owner";
-import { dataURLToBytes } from "@/utils/data";
+import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
 import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
 
 const router = createApp<NetworkMiddlewareEnv>();
@@ -38,13 +38,23 @@ router.get("/:name/h", clientMiddleware, async (c) => {
   const name = c.req.param("name");
   const { network, client } = c.var;
 
-  const existingHeaderFile = await c.env.HEADER_BUCKET.get(MEDIA_BUCKET_KEY.registered(network, name));
+  const isHead = c.req.method === "HEAD";
+
+  const existingHeaderFile = await R2GetOrHead(
+    c.env.HEADER_BUCKET,
+    MEDIA_BUCKET_KEY.registered(network, name),
+    isHead,
+  );
 
   if (existingHeaderFile && existingHeaderFile.httpMetadata?.contentType === "image/jpeg") {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", existingHeaderFile.size.toString());
 
     return c.body(existingHeaderFile.body);
+  }
+
+  if (isHead) {
+    return c.text(`${name} not found on ${network}`, 404);
   }
 
   const unregisteredHeader = await findAndPromoteUnregisteredMedia({
