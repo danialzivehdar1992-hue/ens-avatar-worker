@@ -53,10 +53,6 @@ router.get("/:name/h", clientMiddleware, async (c) => {
     return c.body(existingHeaderFile.body);
   }
 
-  if (isHead) {
-    return c.text(`${name} not found on ${network}`, 404);
-  }
-
   const unregisteredHeader = await findAndPromoteUnregisteredMedia({
     env: c.env,
     network,
@@ -68,7 +64,7 @@ router.get("/:name/h", clientMiddleware, async (c) => {
   if (unregisteredHeader) {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", unregisteredHeader.file.size.toString());
-
+    if (isHead) return;
     return c.body(unregisteredHeader.body);
   }
 
