@@ -37,9 +37,11 @@ router.get("/:name", clientMiddleware, async (c) => {
 
   const isHead = c.req.method === "HEAD";
 
+  const bucketKey = MEDIA_BUCKET_KEY.registered(network, name);
+
   const existingAvatarFile = await R2GetOrHead(
     c.env.AVATAR_BUCKET,
-    MEDIA_BUCKET_KEY.registered(network, name),
+    bucketKey,
     isHead,
   );
 
@@ -49,12 +51,7 @@ router.get("/:name", clientMiddleware, async (c) => {
   ) {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", existingAvatarFile.size.toString());
-
     return c.body(existingAvatarFile.body);
-  }
-
-  if (isHead) {
-    return c.text(`${name} not found on ${network}`, 404);
   }
 
   const unregisteredAvatar = await findAndPromoteUnregisteredMedia({
@@ -69,6 +66,7 @@ router.get("/:name", clientMiddleware, async (c) => {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", unregisteredAvatar.file.size.toString());
 
+    if (isHead) return;
     return c.body(unregisteredAvatar.body);
   }
 

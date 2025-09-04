@@ -8,11 +8,11 @@ export const getOwnerAndAvailable = async ({
   name: string;
 }) => {
   const labels = name.split(".");
-  const isDotEth = labels.length >= 2 && labels.at(-1) === "eth";
+  const is2LDDotEth = labels.length === 2 && labels.at(-1) === "eth";
 
   const [ownership, available] = await Promise.all([
     client.getOwner({ name }),
-    isDotEth ? client.getAvailable({ name }) : false,
+    is2LDDotEth ? client.getAvailable({ name }) : false,
   ]);
 
   return {
