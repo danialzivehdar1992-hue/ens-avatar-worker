@@ -66,7 +66,7 @@ router.get("/:name", clientMiddleware, async (c) => {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", unregisteredAvatar.file.size.toString());
 
-    if (isHead) return;
+    if (isHead) return c.body(null);
     return c.body(unregisteredAvatar.body);
   }
 
