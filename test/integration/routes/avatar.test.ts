@@ -294,11 +294,6 @@ describe("Avatar Routes", () => {
 
       const testData = await createTestUploadData("avatar", name, imageHash, expiry);
 
-      console.log(`${network}:uploadAvatar`, {
-        name,
-        testData,
-      });
-
       const res = await app.request(`/${network}/${name}`, {
         method: "PUT",
         headers: {
@@ -311,8 +306,6 @@ describe("Avatar Routes", () => {
           unverifiedAddress: testData.address,
         }),
       }, env);
-
-      console.log(`${network}:res`, res);
 
       return {
         res,
@@ -520,7 +513,6 @@ describe("Avatar Routes", () => {
       });
 
       const dataURL = `data:image/jpeg;base64,${btoa(Array.from(imageBuffer).map(byte => String.fromCharCode(byte)).join(""))}`;
-      console.log(`${network}: `, NORMALIZED_NAME, dataURL);
       const { res } = await uploadAvatar(NORMALIZED_NAME, dataURL, network);
 
       expect(res.status).toBe(200);
