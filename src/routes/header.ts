@@ -9,7 +9,7 @@ import { getVerifiedAddress } from "@/utils/eth";
 import { getOwnerAndAvailable } from "@/utils/owner";
 import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
 import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
-import { isSubnameAndParentOwner } from "@/utils/subname";
+import { isSubname, isParentOwner } from "@/utils/subname";
 
 const router = createApp<NetworkMiddlewareEnv>();
 
@@ -118,7 +118,7 @@ router.put("/:name/h", clientMiddleware, vValidator("json", uploadSchema), async
     }
   }
   // Check that user is the parent owner of the name if it is a subname and not available
-  else if (!(await isSubnameAndParentOwner({ name, client, verifiedAddress }))) {
+  else if (isSubname(name) && !(await isParentOwner({ name, client, verifiedAddress }))) {
     return c.text(
       `Address ${verifiedAddress} is not the parent owner of ${name}`,
       403,

@@ -12,7 +12,7 @@ import {
   findAndPromoteUnregisteredMedia,
   MEDIA_BUCKET_KEY,
 } from "@/utils/media";
-import { isSubnameAndParentOwner } from "@/utils/subname";
+import { isParentOwner, isSubname } from "@/utils/subname";
 
 const router = createApp<NetworkMiddlewareEnv>();
 
@@ -130,7 +130,7 @@ router.put(
       }
     }
     // Check that user is the parent owner of the name if it is a subname and not available
-    else if (!(await isSubnameAndParentOwner({ name, client, verifiedAddress }))) {
+    else if (isSubname(name) && !(await isParentOwner({ name, client, verifiedAddress }))) {
       return c.text(
         `Address ${verifiedAddress} is not the parent owner of ${name}`,
         403,
