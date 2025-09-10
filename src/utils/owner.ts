@@ -12,11 +12,11 @@ export const getOwnerAndAvailable = async ({
 
   const [ownership, available] = await Promise.all([
     client.getOwner({ name }),
-    is2LDDotEth ? client.getAvailable({ name }) : false,
+    is2LDDotEth ? client.getAvailable({ name }) : undefined,
   ]);
 
   return {
     owner: ownership?.owner ?? null,
-    available,
+    available: available ?? !ownership?.owner,
   };
 };

@@ -8,7 +8,11 @@ import { normalize } from "viem/ens";
 import { getVerifiedAddress } from "@/utils/eth";
 import { getOwnerAndAvailable } from "@/utils/owner";
 import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
-import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
+import {
+  findAndPromoteUnregisteredMedia,
+  MEDIA_BUCKET_KEY,
+} from "@/utils/media";
+import { isSubnameAndParentOwner } from "@/utils/subname";
 
 const router = createApp<NetworkMiddlewareEnv>();
 
@@ -114,7 +118,6 @@ router.put(
     }
 
     const { available, owner } = await getOwnerAndAvailable({ client, name });
-
     if (!available) {
       if (!owner) {
         return c.text("Name not found", 404);
@@ -125,6 +128,13 @@ router.put(
           403,
         );
       }
+    }
+    // Check that user is the parent owner of the name if it is a subname and not available
+    else if (!(await isSubnameAndParentOwner({ name, client, verifiedAddress }))) {
+      return c.text(
+        `Address ${verifiedAddress} is not the parent owner of ${name}`,
+        403,
+      );
     }
 
     if (parseInt(expiry) < Date.now()) {
