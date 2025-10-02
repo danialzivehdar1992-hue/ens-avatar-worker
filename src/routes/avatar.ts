@@ -8,7 +8,11 @@ import { normalize } from "viem/ens";
 import { getVerifiedAddress } from "@/utils/eth";
 import { getOwnerAndAvailable } from "@/utils/owner";
 import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
-import { findAndPromoteUnregisteredMedia, MEDIA_BUCKET_KEY } from "@/utils/media";
+import {
+  findAndPromoteUnregisteredMedia,
+  MEDIA_BUCKET_KEY,
+} from "@/utils/media";
+import { isParentOwner, isSubname } from "@/utils/subname";
 
 const router = createApp<NetworkMiddlewareEnv>();
 
@@ -37,9 +41,11 @@ router.get("/:name", clientMiddleware, async (c) => {
 
   const isHead = c.req.method === "HEAD";
 
+  const bucketKey = MEDIA_BUCKET_KEY.registered(network, name);
+
   const existingAvatarFile = await R2GetOrHead(
     c.env.AVATAR_BUCKET,
-    MEDIA_BUCKET_KEY.registered(network, name),
+    bucketKey,
     isHead,
   );
 
@@ -49,12 +55,7 @@ router.get("/:name", clientMiddleware, async (c) => {
   ) {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", existingAvatarFile.size.toString());
-
     return c.body(existingAvatarFile.body);
-  }
-
-  if (isHead) {
-    return c.text(`${name} not found on ${network}`, 404);
   }
 
   const unregisteredAvatar = await findAndPromoteUnregisteredMedia({
@@ -69,6 +70,7 @@ router.get("/:name", clientMiddleware, async (c) => {
     c.header("Content-Type", "image/jpeg");
     c.header("Content-Length", unregisteredAvatar.file.size.toString());
 
+    if (isHead) return c.body(null);
     return c.body(unregisteredAvatar.body);
   }
 
@@ -116,7 +118,6 @@ router.put(
     }
 
     const { available, owner } = await getOwnerAndAvailable({ client, name });
-
     if (!available) {
       if (!owner) {
         return c.text("Name not found", 404);
@@ -127,6 +128,13 @@ router.put(
           403,
         );
       }
+    }
+    // Check that user is the parent owner of the name if it is a subname and not available
+    else if (isSubname(name) && !(await isParentOwner({ name, client, verifiedAddress }))) {
+      return c.text(
+        `Address ${verifiedAddress} is not the parent owner of ${name}`,
+        403,
+      );
     }
 
     if (parseInt(expiry) < Date.now()) {
