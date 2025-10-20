@@ -1,33 +1,45 @@
-import { createCors, error } from "itty-router";
-import { Router } from "itty-router/Router";
-import { ValidatedRequest, validateChain } from "./chains";
-import { handleGet } from "./get";
-import { handlePut } from "./put";
-import { Env } from "./types";
+import { createApp } from "./utils/hono";
+import { NetworkMiddlewareEnv, networkMiddleware } from "./utils/chains";
+import avatarRouter from "./routes/avatar";
+import headerRouter from "./routes/header";
+import { cors } from "hono/cors";
 
-const { preflight, corsify } = createCors({
-  origins: ["*"],
-  methods: ["PUT", "GET", "HEAD", "OPTIONS"],
-});
+const app = createApp();
+app.use(
+  "*",
+  cors({
+    origin: (origin, c) => {
+      const requestOrigin = c.req.header("Origin") || "";
+      // We rely on ENVIRONMENT from wrangler config
+      const isProd = c.env.ENVIRONMENT === "production";
 
-const router = Router();
+      // If production environment: only allow subdomains of ens.domains
+      if (isProd) {
+        try {
+          const hostname = new URL(requestOrigin).hostname;
+          // e.g. myapp.ens.domains or abc.def.ens.domains
+          if (hostname.endsWith(".ens.domains")) {
+            return requestOrigin; // reflect subdomain
+          }
+        }
+        catch {
+          // If it's not a valid URL, deny
+        }
+        return ""; // empty => disallowed
+      }
 
-router.all("*", preflight);
-router.all("/:network/:name?", validateChain);
-router.put<ValidatedRequest, [Env]>("/:network/:name?", handlePut);
-router.get<ValidatedRequest, [Env]>("/:network/:name?", handleGet);
-router.head<ValidatedRequest, [Env]>("/:network/:name?", handleGet);
-router.options("/:network/:name?", () => new Response(null, { status: 204 }));
-router.all("*", () => error(404, "Not Found"));
+      // Otherwise (development), allow all
+      return "*";
+    },
+    allowMethods: ["GET", "PUT", "POST", "OPTIONS", "DELETE"],
+  }),
+);
+const networkRouter = createApp<NetworkMiddlewareEnv>().use(networkMiddleware);
 
-export default {
-  fetch: async (request: Request, env: Env) =>
-    router
-      .handle(request, env)
-      .catch((e) => {
-        console.error("Caught error");
-        console.error(e);
-        return error(500, "Internal Server Error");
-      })
-      .then(corsify),
-};
+networkRouter.route("/", avatarRouter);
+networkRouter.route("/", headerRouter);
+
+app.route("/", networkRouter);
+app.route("/:network", networkRouter);
+
+export default app;

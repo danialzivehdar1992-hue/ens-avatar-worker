@@ -32,10 +32,10 @@ Value structure:
 
 ```json
 {
-  "mainnet": "<MAINNET_RPC>",
-  "goerli": "<GOERLI_RPC>",
-  "sepolia": "<SEPOLIA_RPC>",
-  "holesky": "<HOLESKY_RPC>"
+    "mainnet": "<MAINNET_RPC>",
+    "goerli": "<GOERLI_RPC>",
+    "sepolia": "<SEPOLIA_RPC>",
+    "holesky": "<HOLESKY_RPC>"
 }
 ```
 

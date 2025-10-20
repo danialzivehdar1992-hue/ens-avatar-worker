@@ -40,7 +40,7 @@ jobs:
           pnpm version ${{ github.event.release.tag_name }} --no-git-tag-version
 
       - name: Publish
-        uses: cloudflare/wrangler-action@2.0.0
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

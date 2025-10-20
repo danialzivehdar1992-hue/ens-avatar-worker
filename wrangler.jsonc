@@ -1,0 +1,59 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "avatar-upload",
+    "main": "src/index.ts",
+    "compatibility_date": "2025-02-18",
+    // "compatibility_flags": [
+    //   "nodejs_compat"
+    // ],
+    // "vars": {
+    //   "MY_VAR": "my-variable"
+    // },
+    // "kv_namespaces": [
+    //   {
+    //     "binding": "MY_KV_NAMESPACE",
+    //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    //   }
+    // ],
+    "r2_buckets": [
+        {
+            "binding": "AVATAR_BUCKET",
+            "bucket_name": "avatar-storage",
+            "preview_bucket_name": "preview-avatar-storage"
+        },
+        {
+            "binding": "HEADER_BUCKET",
+            "bucket_name": "header-storage",
+            "preview_bucket_name": "preview-header-storage"
+        }
+    ],
+    "vars": {
+        "ENVIRONMENT": "dev"
+    },
+    "env": {
+        "staging": {
+            "vars": {
+                "ENVIRONMENT": "staging"
+            }
+        },
+        "production": {
+            "vars": {
+                "ENVIRONMENT": "production"
+            }
+        }
+    }
+    // "d1_databases": [
+    //   {
+    //     "binding": "MY_DB",
+    //     "database_name": "my-database",
+    //     "database_id": ""
+    //   }
+    // ],
+    // "ai": {
+    //   "binding": "AI"
+    // },
+    // "observability": {
+    //   "enabled": true,
+    //   "head_sampling_rate": 1
+    // }
+}
