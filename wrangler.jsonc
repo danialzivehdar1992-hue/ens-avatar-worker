@@ -32,6 +32,7 @@
     },
     "env": {
         "staging": {
+            "name": "avatar-upload-staging",
             "vars": {
                 "ENVIRONMENT": "staging"
             }
