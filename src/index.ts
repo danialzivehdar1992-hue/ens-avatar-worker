@@ -1,8 +1,8 @@
-import { createApp } from "./utils/hono";
-import { NetworkMiddlewareEnv, networkMiddleware } from "./utils/chains";
+import { cors } from "hono/cors";
 import avatarRouter from "./routes/avatar";
 import headerRouter from "./routes/header";
-import { cors } from "hono/cors";
+import { type NetworkMiddlewareEnv, networkMiddleware } from "./utils/chains";
+import { createApp } from "./utils/hono";
 
 const app = createApp();
 app.use(
@@ -21,8 +21,7 @@ app.use(
           if (hostname.endsWith(".ens.domains")) {
             return requestOrigin; // reflect subdomain
           }
-        }
-        catch {
+        } catch {
           // If it's not a valid URL, deny
         }
         return ""; // empty => disallowed

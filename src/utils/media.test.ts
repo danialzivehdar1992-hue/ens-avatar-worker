@@ -1,10 +1,10 @@
-import { describe, expect, test, vi, beforeEach, assert } from "vitest";
+import { env } from "cloudflare:test";
+import type { ModuleMock } from "@test/setup/meta";
+import { assert, beforeEach, describe, expect, test, vi } from "vitest";
+import type { EnsPublicClient } from "@/utils/chains";
+import type { MediaType } from "@/utils/media";
 import * as media from "@/utils/media";
 import * as owner from "@/utils/owner";
-import { ModuleMock } from "@test/setup/meta";
-import { env } from "cloudflare:test";
-import { EnsPublicClient } from "@/utils/chains";
-import { MediaType } from "@/utils/media";
 
 const readableStreamToString = async (stream: ReadableStream) => {
   const reader = stream.getReader();
@@ -15,8 +15,7 @@ const readableStreamToString = async (stream: ReadableStream) => {
     const { value, done: isDone } = await reader.read();
     if (isDone) {
       done = true;
-    }
-    else {
+    } else {
       chunks.push(value);
     }
   }
@@ -34,9 +33,13 @@ const readableStreamToString = async (stream: ReadableStream) => {
   return decoder.decode(result);
 };
 
-vi.mock("@/utils/owner", () => ({
-  getOwnerAndAvailable: vi.fn(),
-}) satisfies ModuleMock<typeof owner>);
+vi.mock(
+  "@/utils/owner",
+  () =>
+    ({
+      getOwnerAndAvailable: vi.fn(),
+    }) satisfies ModuleMock<typeof owner>,
+);
 
 describe("findAndPromoteUnregisteredMedia", () => {
   const MOCK_DATA = {
@@ -55,14 +58,22 @@ describe("findAndPromoteUnregisteredMedia", () => {
     vi.resetAllMocks();
   });
 
-  const insertMockUnregisteredMedia = async (name: string, owner: string, mediaType: MediaType) => {
+  const insertMockUnregisteredMedia = async (
+    name: string,
+    owner: string,
+    mediaType: MediaType,
+  ) => {
     const bucket = media.getMediaBucket(env, mediaType);
 
-    return bucket.put(media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, name, owner), new TextEncoder().encode(`test-image-data-${name}-${owner}`), {
-      httpMetadata: {
-        contentType: "image/jpeg",
+    return bucket.put(
+      media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, name, owner),
+      new TextEncoder().encode(`test-image-data-${name}-${owner}`),
+      {
+        httpMetadata: {
+          contentType: "image/jpeg",
+        },
       },
-    });
+    );
   };
 
   describe.for(["avatar", "header"] as const)("%s media", (mediaType) => {
@@ -132,7 +143,13 @@ describe("findAndPromoteUnregisteredMedia", () => {
       });
 
       expect(result).toBeUndefined();
-      expect(mediaBucketSpy.get).toHaveBeenCalledWith(media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, MOCK_DATA.owner));
+      expect(mediaBucketSpy.get).toHaveBeenCalledWith(
+        media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          MOCK_DATA.owner,
+        ),
+      );
       expect(mediaBucketSpy.put).not.toHaveBeenCalled();
     });
 
@@ -143,7 +160,11 @@ describe("findAndPromoteUnregisteredMedia", () => {
         available: false,
       });
 
-      await insertMockUnregisteredMedia(MOCK_DATA.name, MOCK_DATA.owner, mediaType);
+      await insertMockUnregisteredMedia(
+        MOCK_DATA.name,
+        MOCK_DATA.owner,
+        mediaType,
+      );
       await insertMockUnregisteredMedia(MOCK_DATA.name, "0x0", mediaType);
 
       const result = await media.findAndPromoteUnregisteredMedia({
@@ -164,20 +185,34 @@ describe("findAndPromoteUnregisteredMedia", () => {
       expect(mediaBucketSpy.put).toHaveBeenCalledWith(
         media.MEDIA_BUCKET_KEY.registered(MOCK_DATA.network, MOCK_DATA.name),
         expect.anything(),
-        { httpMetadata: {
-          contentType: "image/jpeg",
-        } },
+        {
+          httpMetadata: {
+            contentType: "image/jpeg",
+          },
+        },
       );
 
       // Verify the list and delete operations
       expect(mediaBucketSpy.list).toHaveBeenCalledWith({
-        prefix: media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, ""),
+        prefix: media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          "",
+        ),
         cursor: undefined,
       });
 
       expect(mediaBucketSpy.delete).toHaveBeenCalledWith([
-        media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, "0x0"),
-        media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, MOCK_DATA.owner),
+        media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          "0x0",
+        ),
+        media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          MOCK_DATA.owner,
+        ),
       ]);
     });
 
@@ -188,25 +223,31 @@ describe("findAndPromoteUnregisteredMedia", () => {
         available: false,
       });
 
-      const unregisteredAvatarFile1 = await insertMockUnregisteredMedia(MOCK_DATA.name, MOCK_DATA.owner, mediaType);
-      const unregisteredAvatarFile2 = await insertMockUnregisteredMedia(MOCK_DATA.name, "0x0", mediaType);
+      const unregisteredAvatarFile1 = await insertMockUnregisteredMedia(
+        MOCK_DATA.name,
+        MOCK_DATA.owner,
+        mediaType,
+      );
+      const unregisteredAvatarFile2 = await insertMockUnregisteredMedia(
+        MOCK_DATA.name,
+        "0x0",
+        mediaType,
+      );
 
       // Mock R2 bucket list to return objects with pagination
       const mockCursor = "next-page-cursor";
-      mediaBucketSpy.list.mockResolvedValueOnce({
-        objects: [
-          unregisteredAvatarFile1,
-        ],
-        truncated: true,
-        cursor: mockCursor,
-        delimitedPrefixes: [],
-      }).mockResolvedValueOnce({
-        objects: [
-          unregisteredAvatarFile2,
-        ],
-        truncated: false,
-        delimitedPrefixes: [],
-      });
+      mediaBucketSpy.list
+        .mockResolvedValueOnce({
+          objects: [unregisteredAvatarFile1],
+          truncated: true,
+          cursor: mockCursor,
+          delimitedPrefixes: [],
+        })
+        .mockResolvedValueOnce({
+          objects: [unregisteredAvatarFile2],
+          truncated: false,
+          delimitedPrefixes: [],
+        });
 
       const result = await media.findAndPromoteUnregisteredMedia({
         env: env,
@@ -222,20 +263,36 @@ describe("findAndPromoteUnregisteredMedia", () => {
       // Verify the list and delete operations were called twice
       expect(mediaBucketSpy.list).toHaveBeenCalledTimes(2);
       expect(mediaBucketSpy.list).toHaveBeenCalledWith({
-        prefix: media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, ""),
+        prefix: media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          "",
+        ),
         cursor: undefined,
       });
       expect(mediaBucketSpy.list).toHaveBeenCalledWith({
-        prefix: media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, ""),
+        prefix: media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          "",
+        ),
         cursor: mockCursor,
       });
 
       expect(mediaBucketSpy.delete).toHaveBeenCalledTimes(2);
       expect(mediaBucketSpy.delete).toHaveBeenCalledWith([
-        media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, MOCK_DATA.owner),
+        media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          MOCK_DATA.owner,
+        ),
       ]);
       expect(mediaBucketSpy.delete).toHaveBeenCalledWith([
-        media.MEDIA_BUCKET_KEY.unregistered(MOCK_DATA.network, MOCK_DATA.name, "0x0"),
+        media.MEDIA_BUCKET_KEY.unregistered(
+          MOCK_DATA.network,
+          MOCK_DATA.name,
+          "0x0",
+        ),
       ]);
     });
   });
