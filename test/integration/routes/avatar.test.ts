@@ -39,6 +39,7 @@ describe("Avatar Routes", () => {
   const bucketSpy = {
     get: vi.spyOn(env.AVATAR_BUCKET, "get"),
     put: vi.spyOn(env.AVATAR_BUCKET, "put"),
+    delete: vi.spyOn(env.AVATAR_BUCKET, "delete"),
   };
 
   const findAndPromoteUnregisteredMediaSpy = vi.spyOn(
@@ -450,6 +451,60 @@ describe("Avatar Routes", () => {
         ),
         imageBuffer,
         { httpMetadata: { contentType: "image/jpeg" } },
+      );
+    });
+
+    test("returns 200 when upload is successful for an available name that has expired and has a prior registered image", async () => {
+      // Step 1: Put the initial image into storage
+      const initialImage = new Uint8Array([1, 2, 3]);
+      await env.AVATAR_BUCKET.put(
+        media.MEDIA_BUCKET_KEY.registered("mainnet", MOCK_NAME),
+        initialImage,
+        {
+          httpMetadata: { contentType: "image/jpeg" },
+        },
+      );
+      // Verify image is returned
+      const getRes = await app.request(`/${MOCK_NAME}`, {}, env);
+      expect(getRes.status).toBe(200);
+      expect(getRes.headers.get("Content-Length")).toBe(
+        initialImage.length.toString(),
+      );
+      expect(new Uint8Array(await getRes.arrayBuffer())).toEqual(initialImage);
+
+      // Step 2: Upload a new image
+      vi.mocked(owner.getOwnerAndAvailable).mockResolvedValue({
+        available: true,
+        owner: null,
+      });
+
+      const dataURL = "data:image/jpeg;base64,test123123";
+      const { res: putRes2, imageBuffer: putImageBuffer2 } = await uploadAvatar(
+        NORMALIZED_NAME,
+        dataURL,
+        "mainnet",
+      );
+      expect(putRes2.status).toBe(200);
+      // Verify the previous registered image is deleted
+      expect(bucketSpy.delete).toHaveBeenLastCalledWith(
+        media.MEDIA_BUCKET_KEY.registered("mainnet", NORMALIZED_NAME),
+      );
+      // Verify the file was uploaded to the unregistered path
+      expect(bucketSpy.put).toHaveBeenLastCalledWith(
+        media.MEDIA_BUCKET_KEY.unregistered(
+          "mainnet",
+          NORMALIZED_NAME,
+          TEST_ACCOUNT.address,
+        ),
+        putImageBuffer2,
+        { httpMetadata: { contentType: "image/jpeg" } },
+      );
+
+      // Verify the previous registered image no longer resolves
+      const getRes2 = await app.request(`/${MOCK_NAME}`, {}, env);
+      expect(getRes2.status).toBe(404);
+      expect(await getRes2.text()).toBe(
+        `${NORMALIZED_NAME} not found on mainnet`,
       );
     });
 
