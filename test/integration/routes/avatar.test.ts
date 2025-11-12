@@ -1,9 +1,11 @@
 import { env } from "cloudflare:test";
-import { createTestUploadData, TEST_ACCOUNT } from "@test/setup/helpers";
-import type { ModuleMock } from "@test/setup/meta";
 import { normalize } from "viem/ens";
 import { sha256 } from "viem/utils";
 import { assert, beforeEach, describe, expect, test, vi } from "vitest";
+
+import { createTestUploadData, TEST_ACCOUNT } from "@test/setup/helpers";
+import type { ModuleMock } from "@test/setup/meta";
+
 import app from "@/index";
 import * as data from "@/utils/data";
 import * as eth from "@/utils/eth";

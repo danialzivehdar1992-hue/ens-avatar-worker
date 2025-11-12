@@ -2,6 +2,7 @@ import { vValidator } from "@hono/valibot-validator";
 import * as v from "valibot";
 import { type Address, type Hex, isAddress, sha256 } from "viem";
 import { normalize } from "viem/ens";
+
 import { clientMiddleware, type NetworkMiddlewareEnv } from "@/utils/chains";
 import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
 import { getVerifiedAddress } from "@/utils/eth";

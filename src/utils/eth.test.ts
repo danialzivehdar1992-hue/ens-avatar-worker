@@ -1,11 +1,13 @@
+import type { Address, Hex } from "viem";
+import { verifyTypedData } from "viem/actions";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import {
   createTestUploadData,
   TEST_ACCOUNT,
   TEST_PUBLIC_CLIENT,
 } from "@test/setup/helpers";
-import type { Address, Hex } from "viem";
-import { verifyTypedData } from "viem/actions";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import { getVerifiedAddress, typedDataParameters } from "@/utils/eth";
 
 vi.mock("viem/actions", {

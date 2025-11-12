@@ -1,4 +1,5 @@
 import { cors } from "hono/cors";
+
 import avatarRouter from "./routes/avatar";
 import headerRouter from "./routes/header";
 import { type NetworkMiddlewareEnv, networkMiddleware } from "./utils/chains";

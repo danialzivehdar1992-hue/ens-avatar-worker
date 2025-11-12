@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+
 import { dataURLToBytes } from "@/utils/data";
 
 describe("dataURLToBytes", () => {

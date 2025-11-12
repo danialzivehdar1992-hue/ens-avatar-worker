@@ -5,6 +5,7 @@ import {
 import { type Address, type Hex, http } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
+
 import type { EnsPublicClient } from "@/utils/chains";
 import { typedDataParameters } from "@/utils/eth";
 

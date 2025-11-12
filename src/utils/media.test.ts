@@ -1,6 +1,8 @@
 import { env } from "cloudflare:test";
-import type { ModuleMock } from "@test/setup/meta";
 import { assert, beforeEach, describe, expect, test, vi } from "vitest";
+
+import type { ModuleMock } from "@test/setup/meta";
+
 import type { EnsPublicClient } from "@/utils/chains";
 import type { MediaType } from "@/utils/media";
 import * as media from "@/utils/media";

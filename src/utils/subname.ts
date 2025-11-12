@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+
 import type { EnsPublicClient } from "./chains";
 
 export const isSubname = (name: string) => {

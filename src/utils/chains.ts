@@ -8,6 +8,7 @@ import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { createClient, http } from "viem";
 import { goerli, holesky, mainnet, sepolia } from "viem/chains";
+
 import { getErrorMessage } from "./error";
 import type { BaseEnv } from "./hono";
 import { addLocalhostEnsContracts } from "./localhost-chain";

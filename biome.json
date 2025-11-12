@@ -3,7 +3,26 @@
 	"files": {
 		"includes": ["src/**", "test/**", "package.json", "biome.json"]
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							[":BUN:", ":NODE:"],
+							":BLANK_LINE:",
+							[":PACKAGE:", "!@test/**", "cloudflare:test"],
+							":BLANK_LINE:",
+							[":ALIAS:", "@test/**", "!@/**"],
+							":BLANK_LINE:",
+							[":PATH:", "@/**"]
+						]
+					}
+				}
+			}
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {

@@ -1,5 +1,6 @@
 import { type Address, type Client, getAddress, type Hex } from "viem";
 import { verifyTypedData } from "viem/actions";
+
 import type { EnsPublicClient } from "./chains";
 
 export const typedDataParameters = {
