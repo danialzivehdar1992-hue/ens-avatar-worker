@@ -1,4 +1,6 @@
-import type { EnsPublicClient, Network } from "./chains";
+import type { ClientWithEns } from "@ensdomains/ensjs/contracts";
+
+import type { Network } from "./chains";
 import { getOwnerAndAvailable } from "./owner";
 
 export type MediaType = "avatar" | "header";
@@ -53,7 +55,7 @@ export const findAndPromoteUnregisteredMedia = async ({
   mediaType,
 }: {
   env: Env;
-  client: EnsPublicClient;
+  client: ClientWithEns;
   network: Network;
   name: string;
   mediaType: MediaType;
