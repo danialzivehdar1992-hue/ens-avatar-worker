@@ -6,6 +6,7 @@ import { normalize } from "viem/ens";
 import { clientMiddleware, type NetworkMiddlewareEnv } from "@/utils/chains";
 import { dataURLToBytes, R2GetOrHead } from "@/utils/data";
 import { getVerifiedAddress } from "@/utils/eth";
+import { addImageResponseHeaders } from "@/utils/headers";
 import { createApp } from "@/utils/hono";
 import {
   findAndPromoteUnregisteredMedia,
@@ -52,8 +53,7 @@ router.get("/:name/h", clientMiddleware, async (c) => {
     existingHeaderFile &&
     existingHeaderFile.httpMetadata?.contentType === "image/jpeg"
   ) {
-    c.header("Content-Type", "image/jpeg");
-    c.header("Content-Length", existingHeaderFile.size.toString());
+    addImageResponseHeaders({ c, size: existingHeaderFile.size.toString() });
 
     return c.body(existingHeaderFile.body);
   }
@@ -67,8 +67,11 @@ router.get("/:name/h", clientMiddleware, async (c) => {
   });
 
   if (unregisteredHeader) {
-    c.header("Content-Type", "image/jpeg");
-    c.header("Content-Length", unregisteredHeader.file.size.toString());
+    addImageResponseHeaders({
+      c,
+      size: unregisteredHeader.file.size.toString(),
+    });
+
     if (isHead) return c.body(null);
     return c.body(unregisteredHeader.body);
   }
