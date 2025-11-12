@@ -1,5 +1,5 @@
-import type { ClientWithEns } from "@ensdomains/ensjs/contracts";
 import { env } from "cloudflare:test";
+import type { ClientWithEns } from "@ensdomains/ensjs/contracts";
 import { assert, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { ModuleMock } from "@test/setup/meta";

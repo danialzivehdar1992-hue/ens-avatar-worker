@@ -64,6 +64,6 @@ describe("getChainFromNetwork", () => {
           }),
         }),
       }),
-    )
+    );
   });
 });

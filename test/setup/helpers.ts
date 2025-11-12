@@ -1,6 +1,4 @@
-import {
-  addEnsContracts
-} from "@ensdomains/ensjs";
+import { addEnsContracts } from "@ensdomains/ensjs";
 import { type Address, createClient, type Hex, http } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";

@@ -21,11 +21,7 @@ export const chains = baseChains;
 export type Chain =
   | (typeof baseChains)[number]
   | ReturnType<typeof addLocalhostEnsContracts>;
-export type Network =
-  | "mainnet"
-  | "sepolia"
-  | "holesky"
-  | "localhost";
+export type Network = "mainnet" | "sepolia" | "holesky" | "localhost";
 
 const isDev = (c: Context<BaseEnv & NetworkMiddlewareEnv, string, object>) =>
   c.env.ENVIRONMENT === "dev";
