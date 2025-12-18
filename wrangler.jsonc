@@ -32,11 +32,33 @@
     },
     "env": {
         "staging": {
+            "name": "avatar-upload-staging",
+            "r2_buckets": [
+                {
+                    "binding": "AVATAR_BUCKET",
+                    "bucket_name": "avatar-storage"
+                },
+                {
+                    "binding": "HEADER_BUCKET",
+                    "bucket_name": "header-storage"
+                }
+            ],
             "vars": {
                 "ENVIRONMENT": "staging"
             }
         },
         "production": {
+            "name": "avatar-upload",
+            "r2_buckets": [
+                {
+                    "binding": "AVATAR_BUCKET",
+                    "bucket_name": "avatar-storage"
+                },
+                {
+                    "binding": "HEADER_BUCKET",
+                    "bucket_name": "header-storage"
+                }
+            ],
             "vars": {
                 "ENVIRONMENT": "production"
             }
