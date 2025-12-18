@@ -4,6 +4,12 @@ import avatarRouter from "./routes/avatar";
 import headerRouter from "./routes/header";
 import { cors } from "hono/cors";
 
+const PROD_ALLOWED_ORIGIN_SUFFIXES = [
+  "ens.domains",
+  "ens.dev",
+  "ens-cf.workers.dev",
+] as const;
+
 const app = createApp();
 app.use(
   "*",
@@ -13,13 +19,15 @@ app.use(
       // We rely on ENVIRONMENT from wrangler config
       const isProd = c.env.ENVIRONMENT === "production";
 
-      // If production environment: only allow subdomains of ens.domains
+      // If production environment: only allow subdomains of approved suffixes
       if (isProd) {
         try {
           const hostname = new URL(requestOrigin).hostname;
-          // e.g. myapp.ens.domains or abc.def.ens.domains
-          if (hostname.endsWith(".ens.domains")) {
-            return requestOrigin; // reflect subdomain
+          const allows = (host: string, suffix: string) =>
+            host === suffix || host.endsWith(`.${suffix}`);
+
+          if (PROD_ALLOWED_ORIGIN_SUFFIXES.some(suffix => allows(hostname, suffix))) {
+            return requestOrigin; // reflect approved origin
           }
         }
         catch {
