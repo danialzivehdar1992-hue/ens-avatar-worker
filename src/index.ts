@@ -8,6 +8,7 @@ const PROD_ALLOWED_ORIGIN_SUFFIXES = [
   "ens.domains",
   "ens.dev",
   "ens-cf.workers.dev",
+  "ens-app-v3.pages.dev"
 ] as const;
 
 const app = createApp();
